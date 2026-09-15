@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>全臺A1類交通事故資料長期趨勢分析</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #F4F6F5;
+    --surface: #FFFFFF;
+    --surface-2: #EAEFEC;
+    --ink: #16262B;
+    --muted: #57696E;
+    --accent: #1F6F78;
+    --accent-2: #C97B3B;
+    --accent-ink: #FFFFFF;
+    --line: #D8DEDB;
+    --shadow: 0 1px 2px rgba(22,38,43,0.06), 0 8px 24px -12px rgba(22,38,43,0.18);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0D1416; --surface: #131C1F; --surface-2: #182226;
+      --ink: #E7EDEC; --muted: #8FA1A4; --accent: #58C4CD; --accent-2: #E3A063;
+      --accent-ink: #06181A; --line: #253134;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0D1416; --surface: #131C1F; --surface-2: #182226;
+    --ink: #E7EDEC; --muted: #8FA1A4; --accent: #58C4CD; --accent-2: #E3A063;
+    --accent-ink: #06181A; --line: #253134;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: 'Noto Sans TC', 'PingFang TC', sans-serif;
+    line-height: 1.75; -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: 'LXGW WenKai TC', 'Noto Sans TC', serif; text-wrap: balance; font-weight: 700; }
+  .mono { font-family: 'Space Mono', monospace; font-variant-numeric: tabular-nums; }
+  a { color: var(--accent); }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+  header.hero { padding: 64px 0 40px; border-bottom: 1px solid var(--line); }
+  .eyebrow {
+    display: inline-block; font-family: 'Space Mono', monospace; font-size: 0.78rem;
+    letter-spacing: 0.08em; color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    padding: 4px 10px; border-radius: 3px; margin-bottom: 18px;
+  }
+  h1.title { font-size: clamp(1.8rem, 4.5vw, 2.6rem); margin: 0 0 14px; }
+  .tagline { font-size: 1.05rem; color: var(--muted); max-width: 60ch; margin: 0 0 32px; }
+
+  .readout {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px; background: var(--line); border: 1px solid var(--line);
+    border-radius: 8px; overflow: hidden;
+  }
+  .readout .cell { background: var(--surface); padding: 16px 18px; }
+  .readout .val { font-family: 'Space Mono', monospace; font-size: 1.4rem; font-weight: 700; color: var(--accent); line-height: 1; }
+  .readout .label { margin-top: 6px; font-size: 0.76rem; color: var(--muted); }
+
+  section { padding: 56px 0; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: none; }
+  .section-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 26px; }
+  .section-head .num { font-family: 'Space Mono', monospace; color: var(--accent-2); font-size: 0.85rem; }
+  .section-head h2 { font-size: 1.35rem; margin: 0; }
+
+  .prose { max-width: 68ch; }
+  .prose p { margin: 0 0 16px; }
+
+  figure { margin: 0 0 36px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); }
+  figure img { display: block; width: 100%; height: auto; border-radius: 6px; }
+  figcaption { margin-top: 12px; font-size: 0.85rem; color: var(--muted); text-align: center; }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 0.92rem; }
+  th, td { border: 1px solid var(--line); padding: 10px 12px; text-align: left; }
+  th { background: var(--surface-2); font-weight: 700; }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; }
+  .tag { font-size: 0.78rem; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); font-family: 'Space Mono', monospace; }
+
+  .finding { background: var(--surface); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 14px 18px; margin-bottom: 16px; }
+  .finding b { color: var(--accent); }
+  .caveat { background: var(--surface); border-left: 3px solid var(--accent-2); border-radius: 0 8px 8px 0; padding: 14px 18px; margin-bottom: 16px; }
+  .caveat b { color: var(--accent-2); }
+
+  footer { padding: 32px 0 48px; text-align: center; color: var(--muted); font-size: 0.82rem; }
+
+  @media (max-width: 600px) { header.hero { padding: 48px 0 32px; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">政府開放資料應用案例（延伸）· 交通安全</span>
+    <h1 class="title">全臺A1類（死亡）道路交通事故資料長期趨勢分析</h1>
+    <p class="tagline">延續雨量儀表板已使用過的交通事故資料維度，改以警政署A1類（死亡）事故資料為對象，涵蓋2019～2022年共7,235件事故，進行時段／天候／道路型態的長期趨勢與多因子交叉分析，並加入地圖視覺化。</p>
+    <div class="readout">
+      <div class="cell"><div class="val">7,235</div><div class="label">去重複後事故件數（2019–2022）</div></div>
+      <div class="cell"><div class="val">07時</div><div class="label">事故最集中時段</div></div>
+      <div class="cell"><div class="val">39.7<small>%</small></div><div class="label">單路部分夜間事故佔比</div></div>
+      <div class="cell"><div class="val">10.0<small>%</small></div><div class="label">夜間無照明佔夜間事故比例</div></div>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="section-head"><span class="num">01</span><h2>問題背景與資料</h2></div>
+    <div class="prose">
+      <p>「臺灣雨量核心儀表板」中已將交通事故列為疊加維度之一，本專案延續同一份資料脈絡，改以警政署公開於data.gov.tw的「A1類（造成人員當場或24小時內死亡）道路交通事故資料」為對象，按年度分別下載2019～2022年（民國108～111年）共4個年度，做更深入的時段、天候、道路型態長期趨勢與多因子交叉分析。</p>
+    </div>
+    <div class="tag-row">
+      <span class="tag">Python</span><span class="tag">Matplotlib</span><span class="tag">NumPy</span>
+      <span class="tag">政府開放資料（警政署）</span>
+    </div>
+    <div class="caveat"><b>資料品質：多當事者去重複。</b>原始資料以「當事者」為單位儲存，同一事故若有多個當事者會產生多列重複的事故層級欄位。合併4個年度共18,299列原始資料後，以（發生年度、發生月份、發生日期、發生時間、發生地點、經度、緯度）7個欄位組成唯一鍵去重複，得到7,235件不重複事故，平均每件事故約2.53筆當事者列。原始CSV尾端附有「事故類別：A1類」等說明列，已用「發生年度必須是純數字」的檢查過濾掉。</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head"><span class="num">02</span><h2>年度趨勢、時段與天候分析</h2></div>
+    <figure>
+      <img src="year_trend.png" alt="各年度事故件數趨勢">
+      <figcaption>圖1　各年度事故件數趨勢（2019～2022）</figcaption>
+    </figure>
+    <figure>
+      <img src="hour_distribution.png" alt="24小時事故件數分布">
+      <figcaption>圖2　24小時各時段事故件數分布</figcaption>
+    </figure>
+    <figure>
+      <img src="weather_comparison.png" alt="天候別事故件數比較">
+      <figcaption>圖3　天候別事故件數比較（對數尺度）</figcaption>
+    </figure>
+    <figure>
+      <img src="weather_location_cross.png" alt="天候與事故位置交叉比較">
+      <figcaption>圖4　不同天候下，事故發生於「交叉路口」的比例</figcaption>
+    </figure>
+    <div class="finding"><b>發現：</b>2019～2022四年事故件數幾乎持平，沒有明顯上升或下降趨勢；事故最集中於早上7點（450件），整體呈現上下班尖峰時段偏高的型態。晴天事故佔絕大多數（79.7%），但雨天事故發生在交叉路口的比例（37.4%）反而低於晴天（44.6%），推測雨天風險因子可能更多來自路段本身。</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head"><span class="num">03</span><h2>光線、道路型態與地圖視覺化</h2></div>
+    <figure>
+      <img src="light_comparison.png" alt="光線狀況比較">
+      <figcaption>圖5　光線狀況比較</figcaption>
+    </figure>
+    <figure>
+      <img src="road_type.png" alt="道路型態大類別比較">
+      <figcaption>圖6　道路型態大類別事故件數比較</figcaption>
+    </figure>
+    <figure>
+      <img src="road_type_daynight_cross.png" alt="道路型態與日夜交叉比較">
+      <figcaption>圖7　不同道路型態下，事故發生於「夜間」的比例</figcaption>
+    </figure>
+    <figure>
+      <img src="geo_heatmap.png" alt="全臺事故地點密度熱點圖">
+      <figcaption>圖8　全臺事故地點密度熱點圖（經緯度二維直方圖）</figcaption>
+    </figure>
+    <figure>
+      <img src="weather_light_cross.png" alt="天候與光線交叉比較">
+      <figcaption>圖9　天候 × 光線：各天候下的光線狀況組成</figcaption>
+    </figure>
+    <div class="finding"><b>發現：</b>夜間無照明僅佔全部夜間事故的10.0%，顯示照明對降低事故有正向幫助。單路部分的夜間事故佔比（39.7%）明顯高於交岔路（30.3%），推測路口號誌與照明較充足。地點密度熱點圖清楚浮現臺灣本島輪廓，熱點集中西部沿海都會區帶。雨天事故中日間光線僅佔43%，明顯低於晴天的64%，指向雨天的風險因子主要來自光線／視線條件。</div>
+    <div class="caveat"><b>限制：</b>本分析僅涵蓋A1類（死亡）事故，未納入樣本數遠大於A1類的A2類（受傷）事故，結論僅代表最嚴重事故的型態。部分交叉分析細分類別樣本數偏少（如強風、風沙天候僅個位數件），已在各分析中排除避免統計誤導。</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    完整成果報告與原始碼請見 <a href="README.md">README</a> 與根目錄的分析腳本 ・ 2026年9月
+  </div>
+</footer>
+
+</body>
+</html>
